@@ -21,11 +21,11 @@ const Creator = sequelize.define(
       allowNull: true,
     },
     educationLevel: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM("High School", "Bachelor", "Master", "PhD", "Other"),
       allowNull: true,
     },
     experience: {
-      type: DataTypes.INTEGER, // Years of experience
+      type: DataTypes.STRING, // Years of experience
       allowNull: true,
     },
     skills: {
@@ -37,7 +37,7 @@ const Creator = sequelize.define(
       allowNull: true,
     },
     socialLinks: {
-      type: DataTypes.JSON, // A JSON object to store social media links
+      type: DataTypes.STRING, // A JSON object to store social media links
       allowNull: true,
     },
     bankAccount: {
@@ -45,7 +45,7 @@ const Creator = sequelize.define(
       allowNull: true,
     },
     bankType: {
-      type: DataTypes.ENUM("Savings", "Checking", "Business", "Other"), // New field
+      type: DataTypes.STRING, // New field
       allowNull: true,
     },
     userId: {
