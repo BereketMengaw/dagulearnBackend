@@ -21,7 +21,7 @@ const Creator = sequelize.define(
       allowNull: true,
     },
     educationLevel: {
-      type: DataTypes.ENUM("High School", "Bachelor", "Master", "PhD", "Other"),
+      type: DataTypes.STRING,
       allowNull: true,
     },
     experience: {
