@@ -37,7 +37,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin: ["https://dagulearn.vercel.app", "https://localhost:3000]// Change this to your frontend URL
+    origin: ["https://dagulearn.vercel.app", "https://localhost:3000"]// Change this to your frontend URL
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
