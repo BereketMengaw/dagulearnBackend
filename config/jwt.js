@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 
-const secretKey = "your_secret_key"; // Replace with an environment variable in production
+// Use the JWT_SECRET environment variable for production
+const secretKey = process.env.JWT_SECRET || "your_secret_key"; // Default to a hardcoded key for local development
 
 const generateToken = (payload, expiresIn = "1d") => {
   return jwt.sign(payload, secretKey, { expiresIn });
