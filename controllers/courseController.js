@@ -4,6 +4,8 @@ const Category = require("../models/Category");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const cloudinary = require("../config/cloudinary");
+
 const { Op } = require("sequelize");
 
 // Setup multer for file uploads
@@ -164,6 +166,7 @@ exports.getCoursesByCreator = async (req, res) => {
 };
 
 // Upload thumbnail for a course
+
 exports.uploadThumbnail = async (req, res) => {
   try {
     if (!req.file) {
@@ -171,35 +174,41 @@ exports.uploadThumbnail = async (req, res) => {
     }
 
     const courseId = req.params.id;
-    const thumbnailPath = `/uploads/thumbnails/${req.file.filename}`;
 
     const course = await Course.findByPk(courseId);
     if (!course) {
-      const uploadedFile = path.join("public", thumbnailPath);
-      if (fs.existsSync(uploadedFile)) fs.unlinkSync(uploadedFile);
-
       return res.status(404).json({ error: "Course not found" });
     }
 
-    if (course.thumbnail) {
-      const existingThumbnail = path.join("public", course.thumbnail);
-      if (fs.existsSync(existingThumbnail)) fs.unlinkSync(existingThumbnail);
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "course_thumbnails",
+    });
+
+    // Delete old Cloudinary image if exists
+    if (course.thumbnail && course.thumbnail.includes("cloudinary.com")) {
+      const publicId = course.thumbnail.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(`course_thumbnails/${publicId}`);
     }
 
-    course.thumbnail = thumbnailPath;
+    // Save new thumbnail URL
+    course.thumbnail = result.secure_url;
     await course.save();
 
     res.status(200).json({
       message: "Thumbnail uploaded successfully",
-      thumbnail: thumbnailPath,
+      thumbnail: result.secure_url,
     });
+    console.log("Thumbnail uploaded successfully:", result.secure_url);
   } catch (error) {
     console.error("Error uploading thumbnail:", error.message);
-    res
-      .status(500)
-      .json({ error: "Error uploading thumbnail", details: error.message });
+    res.status(500).json({
+      error: "Error uploading thumbnail",
+      details: error.message,
+    });
   }
 };
+
 
 // Delete thumbnail
 exports.deleteThumbnail = async (req, res) => {
