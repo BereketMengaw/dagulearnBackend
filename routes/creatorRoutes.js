@@ -28,11 +28,7 @@ router.post(
 );
 
 // Update creator profile picture (upload to Cloudinary)
-router.put(
-  "/creators/:id/profile-picture",
-  upload.single("profilePicture"), // File upload to memory
-  creatorController.updateProfilePicture // Upload to Cloudinary
-);
+
 
 // Route to get creator information by userId
 //router.get("/creators/:userId", creatorController.getCreatorByUserId);
@@ -41,7 +37,7 @@ router.get("/creators/:id", creatorController.getCreatorById);
 
 router.put(
   "/creators/:userId",
-  upload.single("profilePicture"), // field name should be `profilePicture`
+  upload.single("profilepicture"), // field name should be `profilePicture`
   creatorController.updateCreator
 );
 
