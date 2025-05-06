@@ -47,7 +47,11 @@ router.put(
   creatorController.updateProfilePicture
 );
 
+// List all creators
+router.get('/creators', creatorController.getAllCreators);
 
+// Delete a creator by userId
+router.delete('/creators/:userId', creatorController.deleteCreator);
 
 
 module.exports = router;

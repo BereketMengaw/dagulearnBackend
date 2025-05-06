@@ -12,4 +12,10 @@ router.post("/callback", paymentController.handlePaymentCallback);
 // Payment webhook route for Chapa
 router.post("/webhook", paymentController.handlePaymentWebhook);
 
+
+
+// New routes
+router.get("/", paymentController.getAllPayments);
+router.delete("/:id", paymentController.deletePayment);
+
 module.exports = router;

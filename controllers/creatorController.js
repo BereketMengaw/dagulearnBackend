@@ -1,5 +1,7 @@
 const cloudinary = require("cloudinary").v2;
 const Creator = require("../models/Creator");
+const User = require("../models/User");
+
 
 // Configure Cloudinary with your credentials (if not already configured)
 cloudinary.config({
@@ -88,21 +90,21 @@ exports.updateCreatorData = async (req, res) => {
 
 
 
-
 exports.getCreatorById = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; // This should now be userId
 
   try {
-    const creator = await Creator.findByPk(id); // Find creator using primary key
+    const creator = await Creator.findOne({ where: { userId: id } }); // Use userId as lookup
     if (!creator) {
       return res.status(404).json({ message: "Creator not found" });
     }
     res.status(200).json({ creator });
   } catch (error) {
-    console.error("Error fetching creator by ID:", error);
+    console.error("Error fetching creator by userId:", error);
     res.status(500).json({ message: "Failed to fetch creator data" });
   }
 };
+
 
 
 exports.updateProfilePicture = async (req, res) => {
@@ -144,5 +146,43 @@ exports.updateProfilePicture = async (req, res) => {
   }
 };
 
+
+exports.getAllCreators = async (req, res) => {
+  try {
+    const creators = await Creator.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name'], // Include user fields if needed
+        }
+      ]
+    });
+
+    res.status(200).json({ creators });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching creators', error: err.message });
+  }
+};
+
+
+exports.deleteCreator = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const deletedCount = await Creator.destroy({
+      where: { userId }
+    });
+
+    if (deletedCount === 0) {
+      return res.status(404).json({ message: 'Creator not found' });
+    }
+
+    res.status(200).json({ message: 'Creator deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting creator', error: err.message });
+  }
+};
 
 
