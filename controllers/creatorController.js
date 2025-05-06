@@ -142,7 +142,7 @@ exports.updateProfilePicture = async (req, res) => {
     res.status(200).json({ message: "Profile picture updated", creator });
   } catch (err) {
     console.error("Error updating profile picture:", err);
-    res.status(500).json({ message: "Error updating profile picture", error: err.message });
+    res.status(500).json({ message: "Error updating profile picture - size limit", error: err.message });
   }
 };
 
