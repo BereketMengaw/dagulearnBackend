@@ -51,54 +51,53 @@ exports.createCreator = async (req, res) => {
   }
 };
 
-exports.updateProfilePicture = async (req, res) => {
-  const { id } = req.params;
-  const profilePicture = req.file; // File is now in memory
-
-  if (!profilePicture) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-
+exports.updateCreator = async (req, res) => {
   try {
-    // Upload the image to Cloudinary directly from the buffer
-    cloudinary.uploader.upload_stream(
-      {
-        folder: "dagulearn/profile_pictures", // Store in the profile_pictures folder
-        public_id: `${Date.now()}-${profilePicture.originalname}`, // Use unique public_id
-      },
-      async (error, result) => {
-        if (error) {
-          console.error("Error uploading to Cloudinary:", error);
-          return res.status(500).json({ message: "Failed to upload to Cloudinary" });
-        }
+    const { userId } = req.params;
+    const updateData = req.body;
 
-        // Find the creator by id
-        const creator = await Creator.findByPk(id); // Find creator using Sequelize
-        if (!creator) {
-          return res.status(404).json({ message: "Creator not found" });
-        }
+    const creator = await Creator.findOne({ where: { userId } });
+    if (!creator) {
+      return res.status(404).json({ message: "Creator not found" });
+    }
 
-        // Update the creator's profile picture with Cloudinary URL
-        creator.profilePicture = result.secure_url;
+    // If there's an uploaded file (profile picture), handle Cloudinary upload with Promise
+    if (req.file) {
+      const cloudinaryUpload = () =>
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "dagulearn/profile_pictures",
+              public_id: `${Date.now()}-${req.file.originalname}`,
+            },
+            (error, result) => {
+              if (error) {
+                return reject(error);
+              }
+              resolve(result);
+            }
+          );
+          stream.end(req.file.buffer);
+        });
 
-        try {
-          await creator.save();
-          res.status(200).json({
-            message: "Profile picture updated successfully",
-            creator,
-          });
-        } catch (err) {
-          console.error("Error saving creator:", err);
-          res.status(500).json({ message: "Failed to save creator's profile" });
-        }
+      try {
+        const result = await cloudinaryUpload();
+        updateData.profilePicture = result.secure_url;
+      } catch (uploadErr) {
+        console.error("Cloudinary upload error:", uploadErr);
+        return res.status(500).json({ message: "Failed to upload profile picture" });
       }
-    ).end(profilePicture.buffer); // Send the buffer to Cloudinary
+    }
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to update profile picture" });
+    // Update the creator
+    await creator.update(updateData);
+    res.status(200).json({ message: "Creator updated", creator });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating creator", error: err.message });
   }
 };
+
 
 exports.getCreatorById = async (req, res) => {
   const { id } = req.params;
