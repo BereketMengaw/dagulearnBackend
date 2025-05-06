@@ -51,52 +51,42 @@ exports.createCreator = async (req, res) => {
   }
 };
 
-exports.updateCreator = async (req, res) => {
+exports.updateCreatorData = async (req, res) => {
   try {
     const { userId } = req.params;
-    const updateData = req.body;
 
     const creator = await Creator.findOne({ where: { userId } });
     if (!creator) {
       return res.status(404).json({ message: "Creator not found" });
     }
 
-    // If there's an uploaded file (profile picture), handle Cloudinary upload with Promise
-    if (req.file) {
-      const cloudinaryUpload = () =>
-        new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "dagulearn/profile_pictures",
-              public_id: `${Date.now()}-${req.file.originalname}`,
-            },
-            (error, result) => {
-              if (error) {
-                return reject(error);
-              }
-              resolve(result);
-            }
-          );
-          stream.end(req.file.buffer);
-        });
+    const allowedFields = [
+      "bio",
+      "educationLevel",
+      "experience",
+      "skills",
+      "location",
+      "socialLinks",
+      "bankAccount",
+      "bankType",
+    ];
 
-      try {
-        const result = await cloudinaryUpload();
-        updateData.profilePicture = result.secure_url;
-      } catch (uploadErr) {
-        console.error("Cloudinary upload error:", uploadErr);
-        return res.status(500).json({ message: "Failed to upload profile picture" });
-      }
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) updateData[key] = req.body[key];
     }
 
-    // Update the creator
-    await creator.update(updateData);
-    res.status(200).json({ message: "Creator updated", creator });
+    creator.set(updateData);
+    await creator.save();
+
+    res.status(200).json({ message: "Creator data updated", creator });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error updating creator", error: err.message });
+    console.error("Error updating creator data:", err);
+    res.status(500).json({ message: "Error updating creator data", error: err.message });
   }
 };
+
+
 
 
 exports.getCreatorById = async (req, res) => {
@@ -113,5 +103,46 @@ exports.getCreatorById = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch creator data" });
   }
 };
+
+
+exports.updateProfilePicture = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const creator = await Creator.findOne({ where: { userId } });
+    if (!creator) {
+      return res.status(404).json({ message: "Creator not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const cloudinaryUpload = () =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "dagulearn/profile_pictures",
+            public_id: `${Date.now()}-${req.file.originalname}`,
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
+    const result = await cloudinaryUpload();
+    creator.profilePicture = result.secure_url;
+    await creator.save();
+
+    res.status(200).json({ message: "Profile picture updated", creator });
+  } catch (err) {
+    console.error("Error updating profile picture:", err);
+    res.status(500).json({ message: "Error updating profile picture", error: err.message });
+  }
+};
+
 
 

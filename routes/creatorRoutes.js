@@ -29,16 +29,25 @@ router.post(
 
 // Update creator profile picture (upload to Cloudinary)
 
+// 
+
 
 // Route to get creator information by userId
 //router.get("/creators/:userId", creatorController.getCreatorByUserId);
 router.get("/creators/:id", creatorController.getCreatorById);
 //
 
+// Update profile data (non-file fields)
+router.put("/creators/:userId", creatorController.updateCreatorData);
+
+// Update profile picture only
 router.put(
-  "/creators/:userId",
-  upload.single("profilepicture"), // field name should be `profilePicture`
-  creatorController.updateCreator
+  "/creators/:userId/picture",
+  upload.single("profilePicture"),
+  creatorController.updateProfilePicture
 );
+
+
+
 
 module.exports = router;
